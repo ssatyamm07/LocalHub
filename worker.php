@@ -1,71 +1,122 @@
 <?php
 session_start();
 error_reporting(0);
-include('Includes/dbConnection.php'); // Ensure the case matches your directory
+include('includes/dbconnection.php');
 
-if(isset($_POST['submit'])) {
+if (strlen($_SESSION['lssemsaid'] == 0)) {
+    header('location:logout.php');
+} else {
+    if (isset($_POST['submit'])) {
+        $lssemsaid = $_SESSION['lssemsaid'];
+        $name = $_POST['name'] ?? '';
+        $mobnum = $_POST['mobilenumber'] ?? '';
+        $address = $_POST['address'] ?? '';
+        $city = $_POST['city'] ?? '';
+        $category = $_POST['category'] ?? '';
+        $propic = $_FILES["propic"]["name"] ?? '';
 
-    $name = $_POST['name'];
-    $mobnum = $_POST['mobilenumber'];
-    $address = $_POST['address'];
-    $city = $_POST['city'];
-    $service_category = $_POST['service_category'];
-    $profile_picture = $_FILES["profile_picture"]["name"];
-    
-    // File extension validation
-    $extension = substr($profile_picture, strlen($profile_picture) - 4, strlen($profile_picture));
-    $allowed_extensions = array(".jpg", "jpeg", ".png", ".gif");
-    if (!in_array($extension, $allowed_extensions)) {
-        echo "<script>alert('Profile picture has an invalid format. Only jpg / jpeg / png / gif formats are allowed');</script>";
-    } else {
-        // Renaming the uploaded file
-        $profile_picture_new = md5($profile_picture) . time() . $extension;
-        move_uploaded_file($_FILES["profile_picture"]["tmp_name"], "images/" . $profile_picture_new);
+        $allowed_extensions = array("jpg", "jpeg", "png", "gif");
 
-        // Insert data into the database
-        $sql = "INSERT INTO tblworker(service_category, name, profile_picture, mobile_number, address, city) 
-                VALUES(:service_category, :name, :profile_picture, :mobile_number, :address, :city)";
-        $query = $dbh->prepare($sql);
-        $query->bindParam(':service_category', $service_category, PDO::PARAM_STR);
-        $query->bindParam(':name', $name, PDO::PARAM_STR);
-        $query->bindParam(':profile_picture', $profile_picture_new, PDO::PARAM_STR);
-        $query->bindParam(':mobile_number', $mobnum, PDO::PARAM_STR);
-        $query->bindParam(':address', $address, PDO::PARAM_STR);
-        $query->bindParam(':city', $city, PDO::PARAM_STR);
-        $query->execute();
+        if (!empty($propic)) {
+            $extension = pathinfo($propic, PATHINFO_EXTENSION); // Get file extension
+            if (!in_array($extension, $allowed_extensions)) {
+                echo "<script>alert('Profile Pics has Invalid format. Only jpg / jpeg / png / gif format allowed');</script>";
+            } else {
+                $propic = md5($propic) . time() . '.' . $extension; // Ensure file name has extension
+                move_uploaded_file($_FILES["propic"]["tmp_name"], "images/" . $propic);
 
-        $LastInsertId = $dbh->lastInsertId();
-        if ($LastInsertId > 0) {
-            echo '<script>alert("You have registered successfully as a worker.")</script>';
-            echo "<script>window.location.href ='index.php'</script>";
+                $sql = "INSERT INTO tblperson(Category, Name, Picture, MobileNumber, Address, City) 
+                        VALUES(:cat, :name, :pics, :mobilenumber, :address, :city)";
+                $query = $dbh->prepare($sql);
+                $query->bindParam(':name', $name, PDO::PARAM_STR);
+                $query->bindParam(':pics', $propic, PDO::PARAM_STR);
+                $query->bindParam(':cat', $category, PDO::PARAM_STR);
+                $query->bindParam(':mobilenumber', $mobnum, PDO::PARAM_STR);
+                $query->bindParam(':address', $address, PDO::PARAM_STR);
+                $query->bindParam(':city', $city, PDO::PARAM_STR);
+                $query->execute();
+
+                $LastInsertId = $dbh->lastInsertId();
+                if ($LastInsertId > 0) {
+                    echo '<script>alert("Person Detail has been added.")</script>';
+                    echo "<script>window.location.href ='success.php'</script>";
+                } else {
+                    echo '<script>alert("Something Went Wrong. Please try again")</script>';
+                }
+            }
         } else {
-            echo '<script>alert("Something went wrong. Please try again.")</script>';
+            echo "<script>alert('Please upload a profile picture.');</script>";
         }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Local Services Search Engine | Register as Worker</title>
     <!-- Include your CSS and JS files here -->
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <!--================================ Main STYLE SHEETs====================================-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/menu.css">
+    <link rel="stylesheet" type="text/css" href="css/color/color.css">
+    <link rel="stylesheet" type="text/css" href="assets/testimonial/css/style.css" />
+    <link rel="stylesheet" type="text/css" href="assets/testimonial/css/elastislide.css" />
+    <link rel="stylesheet" type="text/css" href="css/responsive.css">
+    <!--================================FONTAWESOME==========================================-->
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.css">
+    <!--================================GOOGLE FONTS=========================================-->
+    <link rel='stylesheet' type='text/css' href='https://fonts.googleapis.com/css?family=Montserrat:400,700|Lato:300,400,700,900'>
+    <!--================================SLIDER REVOLUTION =========================================-->
+    <link rel="stylesheet" type="text/css" href="assets/revolution_slider/css/revslider.css" media="screen" />
     <!-- Custom styles -->
     <style>
-        body { padding: 20px; }
-        .form-container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        body { 
+            padding: 20px; 
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .form-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #fff; 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); 
+            border-radius: 8px;
+        }
+        .form-container h2 {
+            margin-bottom: 20px;
+            color: #343a40;
+        }
+        .form-group label {
+            font-weight: bold;
+            color: #495057;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            border-radius: 4px;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
     </style>
 </head>
 <body>
     <?php include_once('includes/header.php'); ?>
-    <div class="container" 
-    /*style="background-color: green;"*/> -->
+    <div class="container"> 
         <div class="form-container">
             <h2>Register as a Worker</h2>
             <form method="post" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="service_category">Service Category</label>
-                    <select name="service_category" id="service_category" class="form-control" required>
+                    <label for="category">Service Category</label>
+                    <select name="category" id="category" class="form-control" required>
                         <option value="">Choose Category</option>
                         <?php 
                         $sql2 = "SELECT * FROM tblcategory";
@@ -81,9 +132,9 @@ if(isset($_POST['submit'])) {
                     <label for="name">Name</label>
                     <input type="text" class="form-control" id="name" name="name" placeholder="Enter your name" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group"> 
                     <label for="profile_picture">Profile Picture</label>
-                    <input type="file" class="form-control" id="profile_picture" name="profile_picture" required>
+                    <input type="file" class="form-control" id="propic" name="propic" required>
                 </div>
                 <div class="form-group">
                     <label for="mobilenumber">Mobile Number</label>
