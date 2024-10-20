@@ -3,50 +3,46 @@ session_start();
 error_reporting(0);
 include('includes/dbconnection.php');
 
-if (strlen($_SESSION['lssemsaid'] == 0)) {
-    header('location:logout.php');
-} else {
-    if (isset($_POST['submit'])) {
-        $lssemsaid = $_SESSION['lssemsaid'];
-        $name = $_POST['name'] ?? '';
-        $mobnum = $_POST['mobilenumber'] ?? '';
-        $address = $_POST['address'] ?? '';
-        $city = $_POST['city'] ?? '';
-        $category = $_POST['category'] ?? '';
-        $propic = $_FILES["propic"]["name"] ?? '';
+if (isset($_POST['submit'])) {
+    $lssemsaid = $_SESSION['lssemsaid'];
+    $name = $_POST['name'] ?? '';
+    $mobnum = $_POST['mobilenumber'] ?? '';
+    $address = $_POST['address'] ?? '';
+    $city = $_POST['city'] ?? '';
+    $category = $_POST['category'] ?? '';
+    $propic = $_FILES["propic"]["name"] ?? '';
 
-        $allowed_extensions = array("jpg", "jpeg", "png", "gif");
+    $allowed_extensions = array("jpg", "jpeg", "png", "gif");
 
-        if (!empty($propic)) {
-            $extension = pathinfo($propic, PATHINFO_EXTENSION); // Get file extension
-            if (!in_array($extension, $allowed_extensions)) {
-                echo "<script>alert('Profile Pics has Invalid format. Only jpg / jpeg / png / gif format allowed');</script>";
-            } else {
-                $propic = md5($propic) . time() . '.' . $extension; // Ensure file name has extension
-                move_uploaded_file($_FILES["propic"]["tmp_name"], "images/" . $propic);
-
-                $sql = "INSERT INTO tblperson(Category, Name, Picture, MobileNumber, Address, City) 
-                        VALUES(:cat, :name, :pics, :mobilenumber, :address, :city)";
-                $query = $dbh->prepare($sql);
-                $query->bindParam(':name', $name, PDO::PARAM_STR);
-                $query->bindParam(':pics', $propic, PDO::PARAM_STR);
-                $query->bindParam(':cat', $category, PDO::PARAM_STR);
-                $query->bindParam(':mobilenumber', $mobnum, PDO::PARAM_STR);
-                $query->bindParam(':address', $address, PDO::PARAM_STR);
-                $query->bindParam(':city', $city, PDO::PARAM_STR);
-                $query->execute();
-
-                $LastInsertId = $dbh->lastInsertId();
-                if ($LastInsertId > 0) {
-                    echo '<script>alert("Person Detail has been added.")</script>';
-                    echo "<script>window.location.href ='success.php'</script>";
-                } else {
-                    echo '<script>alert("Something Went Wrong. Please try again")</script>';
-                }
-            }
+    if (!empty($propic)) {
+        $extension = pathinfo($propic, PATHINFO_EXTENSION); // Get file extension
+        if (!in_array($extension, $allowed_extensions)) {
+            echo "<script>alert('Profile Pics has Invalid format. Only jpg / jpeg / png / gif format allowed');</script>";
         } else {
-            echo "<script>alert('Please upload a profile picture.');</script>";
+            $propic = md5($propic) . time() . '.' . $extension; // Ensure file name has extension
+            move_uploaded_file($_FILES["propic"]["tmp_name"], "images/" . $propic);
+
+            $sql = "INSERT INTO tblperson(Category, Name, Picture, MobileNumber, Address, City) 
+                    VALUES(:cat, :name, :pics, :mobilenumber, :address, :city)";
+            $query = $dbh->prepare($sql);
+            $query->bindParam(':name', $name, PDO::PARAM_STR);
+            $query->bindParam(':pics', $propic, PDO::PARAM_STR);
+            $query->bindParam(':cat', $category, PDO::PARAM_STR);
+            $query->bindParam(':mobilenumber', $mobnum, PDO::PARAM_STR);
+            $query->bindParam(':address', $address, PDO::PARAM_STR);
+            $query->bindParam(':city', $city, PDO::PARAM_STR);
+            $query->execute();
+
+            $LastInsertId = $dbh->lastInsertId();
+            if ($LastInsertId > 0) {
+                echo '<script>alert("Person Detail has been added.")</script>';
+                echo "<script>window.location.href ='success.php'</script>";
+            } else {
+                echo '<script>alert("Something Went Wrong. Please try again")</script>';
+            }
         }
+    } else {
+        echo "<script>alert('Please upload a profile picture.');</script>";
     }
 }
 ?>
@@ -74,20 +70,22 @@ if (strlen($_SESSION['lssemsaid'] == 0)) {
     <style>
         body { 
             padding: 20px; 
-            background-color: #f8f9fa;
+            background-color: lightblue;
             font-family: Arial, sans-serif;
         }
         .form-container { 
             max-width: 600px; 
-            margin: 0 auto; 
+            margin: 20px auto 0; /* Added margin-top to keep space from navbar */
             padding: 20px; 
             background-color: #fff; 
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); 
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2); 
             border-radius: 8px;
+            animation: fadeIn 1s ease-in-out;
         }
         .form-container h2 {
             margin-bottom: 20px;
             color: #343a40;
+            text-align: center;
         }
         .form-group label {
             font-weight: bold;
@@ -101,10 +99,17 @@ if (strlen($_SESSION['lssemsaid'] == 0)) {
             background-color: #007bff;
             border-color: #007bff;
             border-radius: 4px;
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
         }
         .btn-primary:hover {
             background-color: #0056b3;
             border-color: #004085;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
@@ -158,3 +163,4 @@ if (strlen($_SESSION['lssemsaid'] == 0)) {
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+        
