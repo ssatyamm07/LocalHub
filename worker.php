@@ -1,9 +1,13 @@
 <?php
 session_start();
-error_reporting(0);
+error_reporting(E_ALL); // Enable full error reporting for debugging
+ini_set('display_errors', 1); // Ensure errors are displayed
 include('includes/dbconnection.php');
 
 if (isset($_POST['submit'])) {
+    echo "Form submitted successfully"; // Debugging statement
+    var_dump($_POST); // Debugging form data
+
     $lssemsaid = $_SESSION['lssemsaid'];
     $name = $_POST['name'] ?? '';
     $mobnum = $_POST['mobilenumber'] ?? '';
@@ -12,33 +16,42 @@ if (isset($_POST['submit'])) {
     $category = $_POST['category'] ?? '';
     $propic = $_FILES["propic"]["name"] ?? '';
 
-    $allowed_extensions = array("jpg", "jpeg", "png", "gif");
-
     if (!empty($propic)) {
-        $extension = pathinfo($propic, PATHINFO_EXTENSION); // Get file extension
-        if (!in_array($extension, $allowed_extensions)) {
-            echo "<script>alert('Profile Pics has Invalid format. Only jpg / jpeg / png / gif format allowed');</script>";
+        if ($_FILES["propic"]["error"] !== UPLOAD_ERR_OK) {
+            echo "<script>alert('Error uploading file. Please try again.');</script>";
         } else {
-            $propic = md5($propic) . time() . '.' . $extension; // Ensure file name has extension
-            move_uploaded_file($_FILES["propic"]["tmp_name"], "images/" . $propic);
-
-            $sql = "INSERT INTO tblperson(Category, Name, Picture, MobileNumber, Address, City) 
-                    VALUES(:cat, :name, :pics, :mobilenumber, :address, :city)";
-            $query = $dbh->prepare($sql);
-            $query->bindParam(':name', $name, PDO::PARAM_STR);
-            $query->bindParam(':pics', $propic, PDO::PARAM_STR);
-            $query->bindParam(':cat', $category, PDO::PARAM_STR);
-            $query->bindParam(':mobilenumber', $mobnum, PDO::PARAM_STR);
-            $query->bindParam(':address', $address, PDO::PARAM_STR);
-            $query->bindParam(':city', $city, PDO::PARAM_STR);
-            $query->execute();
-
-            $LastInsertId = $dbh->lastInsertId();
-            if ($LastInsertId > 0) {
-                echo '<script>alert("Person Detail has been added.")</script>';
-                echo "<script>window.location.href ='success.php'</script>";
+            $extension = pathinfo($propic, PATHINFO_EXTENSION);
+            $allowed_extensions = array("jpg", "jpeg", "png", "gif");
+            if (!in_array($extension, $allowed_extensions)) {
+                echo "<script>alert('Profile Picture has an invalid format. Only jpg / jpeg / png / gif format allowed');</script>";
             } else {
-                echo '<script>alert("Something Went Wrong. Please try again")</script>';
+                $propic = md5($propic) . time() . '.' . $extension;
+                move_uploaded_file($_FILES["propic"]["tmp_name"], "images/" . $propic);
+
+                // Insert registration request
+                $sql = "INSERT INTO tblworkerrequests(Category, Name, Picture, MobileNumber, Address, City, Status) 
+                        VALUES(:cat, :name, :pics, :mobilenumber, :address, :city, 'Pending')";
+                $query = $dbh->prepare($sql);
+                $query->bindParam(':name', $name, PDO::PARAM_STR);
+                $query->bindParam(':pics', $propic, PDO::PARAM_STR);
+                $query->bindParam(':cat', $category, PDO::PARAM_STR);
+                $query->bindParam(':mobilenumber', $mobnum, PDO::PARAM_STR);
+                $query->bindParam(':address', $address, PDO::PARAM_STR);
+                $query->bindParam(':city', $city, PDO::PARAM_STR);
+
+                // Execute query with debugging
+                if ($query->execute()) {
+                    $LastInsertId = $dbh->lastInsertId();
+                    if ($LastInsertId > 0) {
+                        echo '<script>alert("Your registration request has been sent for approval.");</script>';
+                        echo '<script>window.location.href = "success.php";</script>';
+                        exit();
+                    } else {
+                        echo '<script>alert("Failed to insert the request. Please try again.");</script>';
+                    }
+                } else {
+                    echo '<script>alert("Query execution failed.");</script>';
+                }
             }
         }
     } else {
@@ -53,18 +66,15 @@ if (isset($_POST['submit'])) {
     <title>Local Services Search Engine | Register as Worker</title>
     <!-- Include your CSS and JS files here -->
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-    <!--================================ Main STYLE SHEETs====================================-->
+    <!-- Main STYLE SHEETs -->
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <link rel="stylesheet" type="text/css" href="css/menu.css">
     <link rel="stylesheet" type="text/css" href="css/color/color.css">
     <link rel="stylesheet" type="text/css" href="assets/testimonial/css/style.css" />
     <link rel="stylesheet" type="text/css" href="assets/testimonial/css/elastislide.css" />
     <link rel="stylesheet" type="text/css" href="css/responsive.css">
-    <!--================================FONTAWESOME==========================================-->
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css">
-    <!--================================GOOGLE FONTS=========================================-->
     <link rel='stylesheet' type='text/css' href='https://fonts.googleapis.com/css?family=Montserrat:400,700|Lato:300,400,700,900'>
-    <!--================================SLIDER REVOLUTION =========================================-->
     <link rel="stylesheet" type="text/css" href="assets/revolution_slider/css/revslider.css" media="screen" />
     <!-- Custom styles -->
     <style>
@@ -75,9 +85,9 @@ if (isset($_POST['submit'])) {
         }
         .form-container { 
             max-width: 600px; 
-            margin: 20px auto 0; /* Added margin-top to keep space from navbar */
+            margin: 20px auto 0; 
             padding: 20px; 
-            background-color: #fff; 
+            background-color: lightcyan; 
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2); 
             border-radius: 8px;
             animation: fadeIn 1s ease-in-out;
@@ -163,4 +173,3 @@ if (isset($_POST['submit'])) {
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-        

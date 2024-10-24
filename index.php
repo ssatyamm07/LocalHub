@@ -1,7 +1,11 @@
 <?php
-session_start();
-error_reporting(0);
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+error_reporting(0); // You can adjust this based on your development or production environment
 include('includes/dbconnection.php');
+
+// Your existing logic...
 ?>
 <!DOCTYPE html>
 <html>
