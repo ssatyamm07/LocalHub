@@ -77,6 +77,54 @@ if (!isset($_SESSION['lssemsaid'])) {
     <title>Pending Worker Requests | Admin</title>
     <!-- Include your CSS files here -->
     <link rel="stylesheet" href="path-to-your-css.css">
+    <style>
+        body {
+            background-color: #f0f8ff; /* Light blue background color */
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff; /* White background for the container */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333333;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th, .table td {
+            padding: 12px;
+            border: 1px solid #dddddd;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f2f2f2;
+        }
+        .btn {
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            color: #ffffff;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .alert {
+            padding: 10px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 
 <body>

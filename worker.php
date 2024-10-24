@@ -14,21 +14,22 @@ if (isset($_POST['submit'])) {
     $address = $_POST['address'] ?? '';
     $city = $_POST['city'] ?? '';
     $category = $_POST['category'] ?? '';
-    $propic = $_FILES["propic"]["name"] ?? '';
 
-    if (!empty($propic)) {
-        if ($_FILES["propic"]["error"] !== UPLOAD_ERR_OK) {
-            echo "<script>alert('Error uploading file. Please try again.');</script>";
+    // Handle profile picture
+    if (isset($_FILES["propic"]) && $_FILES["propic"]["error"] == 0) {
+        $propic = $_FILES["propic"]["name"];
+        $extension = strtolower(pathinfo($propic, PATHINFO_EXTENSION)); // Get the file extension
+        $allowed_extensions = array("jpg", "jpeg", "png", "gif");
+
+        if (!in_array($extension, $allowed_extensions)) {
+            echo "<script>alert('Profile picture has an invalid format. Only jpg / jpeg / png / gif formats are allowed.');</script>";
         } else {
-            $extension = pathinfo($propic, PATHINFO_EXTENSION);
-            $allowed_extensions = array("jpg", "jpeg", "png", "gif");
-            if (!in_array($extension, $allowed_extensions)) {
-                echo "<script>alert('Profile Picture has an invalid format. Only jpg / jpeg / png / gif format allowed');</script>";
-            } else {
-                $propic = md5($propic) . time() . '.' . $extension;
-                move_uploaded_file($_FILES["propic"]["tmp_name"], "images/" . $propic);
+            // Rename the file with md5 hash to avoid duplicates
+            $propic = md5($propic . time()) . '.' . $extension;
 
-                // Insert registration request
+            // Move the uploaded file to the images directory
+            if (move_uploaded_file($_FILES["propic"]["tmp_name"], "admin/images/" . $propic)) {
+                // Insert registration request into the database
                 $sql = "INSERT INTO tblworkerrequests(Category, Name, Picture, MobileNumber, Address, City, Status) 
                         VALUES(:cat, :name, :pics, :mobilenumber, :address, :city, 'Pending')";
                 $query = $dbh->prepare($sql);
@@ -39,19 +40,16 @@ if (isset($_POST['submit'])) {
                 $query->bindParam(':address', $address, PDO::PARAM_STR);
                 $query->bindParam(':city', $city, PDO::PARAM_STR);
 
-                // Execute query with debugging
+                // Execute query and check the result
                 if ($query->execute()) {
-                    $LastInsertId = $dbh->lastInsertId();
-                    if ($LastInsertId > 0) {
-                        echo '<script>alert("Your registration request has been sent for approval.");</script>';
-                        echo '<script>window.location.href = "success.php";</script>';
-                        exit();
-                    } else {
-                        echo '<script>alert("Failed to insert the request. Please try again.");</script>';
-                    }
+                    echo '<script>alert("Your registration request has been sent for approval.");</script>';
+                    echo '<script>window.location.href = "success.php";</script>';
+                    exit();
                 } else {
-                    echo '<script>alert("Query execution failed.");</script>';
+                    echo '<script>alert("Failed to insert the request. Please try again.");</script>';
                 }
+            } else {
+                echo "<script>alert('Failed to move the uploaded file.');</script>";
             }
         }
     } else {
@@ -59,6 +57,7 @@ if (isset($_POST['submit'])) {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html>
